@@ -48,7 +48,6 @@ impl NGfa {
     pub fn from_graph(& mut self, filename: &str){
         let mut  graph = Gfa::new();
         graph.read_file(filename);
-        println!("SIZE is {}", size_of_val(&graph));
         let mut nodes : HashMap<u32, NNode> = HashMap::new();
         for (k,v) in graph.nodes.iter(){
             let n: u32 = k.parse().unwrap();
@@ -100,23 +99,27 @@ pub struct GraphWrapper<'a>{
 
 
 impl <'a> GraphWrapper<'a>{
-    pub fn new(graph: &'a NGfa, del: &str) -> Self{
+    pub fn new() -> Self{
         let mut h: HashMap<String, Vec<&'a NPath>> =  HashMap::new();
-        for x in graph.paths.iter(){
-            let j: Vec<&str> = x.name.split(del).collect();
-            let k = j[0].clone();
-            if h.contains_key(&k.to_owned().clone()){
-                h.get_mut(&k.to_owned().clone()).unwrap().push(x)
-            } else {
-                h.insert(k.to_owned().clone(), vec![x]);
-            }
-
-        }
-
-
         Self{
             genomes: h,
         }
+    }
+
+
+    pub fn fromNGfa(& mut self, graph: &'a NGfa, del: &str){
+        let mut h: HashMap<String, Vec<&'a NPath>> =  HashMap::new();
+        for x in graph.paths.iter(){
+        let j: Vec<&str> = x.name.split(del).collect();
+        let k = j[0].clone();
+        if h.contains_key(&k.to_owned().clone()){
+            h.get_mut(&k.to_owned().clone()).unwrap().push(x)
+        } else {
+            h.insert(k.to_owned().clone(), vec![x]);
+        }
+
+        }
+        self.genomes = h;
     }
 
 
