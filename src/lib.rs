@@ -27,6 +27,7 @@ pub struct NPath {
 }
 
 #[derive(Debug)]
+/// The NumericGFA is GFA were node_ids are interger (u32)
 pub struct NGfa{
     pub nodes: HashMap<u32, NNode>,
     pub paths: Vec<NPath>,
@@ -76,23 +77,9 @@ impl NGfa {
 
 }
 
-pub fn accession_chr_separator(input_vec: Vec<String>, del: &str) -> HashMap<String, Vec<String>>{
-    let mut h: HashMap<String, Vec<String>> = HashMap::new();
-
-    for x in input_vec.iter() {
-        let j: Vec<&str> = x.split(del).collect();
-        let k = j[0].clone();
-        if h.contains_key(&k.to_owned().clone()) {
-            h.get_mut(&k.to_owned().clone()).unwrap().push(x.clone())
-        } else {
-            h.insert(k.to_owned().clone(), vec![x.clone()]);
-        }
-    }
-    h
-
-}
 
 
+///
 pub struct GraphWrapper<'a>{
     pub genomes: HashMap<String, Vec<&'a NPath>>,
 }
@@ -107,16 +94,25 @@ impl <'a> GraphWrapper<'a>{
     }
 
 
+
+    /// NGFA -> Graphwrapper
+    /// If delimiter == " " (nothing)
+    ///     -> No merging
     pub fn fromNGfa(& mut self, graph: &'a NGfa, del: &str){
+        if del == " "{
+            for x in graph.paths.iter(){
+                h.insert(x.name.clone(), vec![x]);
+            }
+        }
         let mut h: HashMap<String, Vec<&'a NPath>> =  HashMap::new();
         for x in graph.paths.iter(){
-        let j: Vec<&str> = x.name.split(del).collect();
-        let k = j[0].clone();
-        if h.contains_key(&k.to_owned().clone()){
-            h.get_mut(&k.to_owned().clone()).unwrap().push(x)
-        } else {
-            h.insert(k.to_owned().clone(), vec![x]);
-        }
+            let j: Vec<&str> = x.name.split(del).collect();
+            let k = j[0].clone();
+            if h.contains_key(&k.to_owned().clone()){
+                h.get_mut(&k.to_owned().clone()).unwrap().push(x)
+            } else {
+                h.insert(k.to_owned().clone(), vec![x]);
+            }
 
         }
         self.genomes = h;
