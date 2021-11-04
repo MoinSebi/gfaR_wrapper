@@ -98,22 +98,23 @@ impl <'a> GraphWrapper<'a>{
     /// NGFA -> Graphwrapper
     /// If delimiter == " " (nothing)
     ///     -> No merging
-    pub fn fromNGfa(& mut self, graph: &'a NGfa, del: &str){
-        if del == " "{
-            for x in graph.paths.iter(){
+    pub fn fromNGfa(& mut self, graph: &'a NGfa, del: &str) {
+        let mut h: HashMap<String, Vec<&'a NPath>> = HashMap::new();
+        if del == " " {
+            for x in graph.paths.iter() {
                 h.insert(x.name.clone(), vec![x]);
             }
-        }
-        let mut h: HashMap<String, Vec<&'a NPath>> =  HashMap::new();
-        for x in graph.paths.iter(){
-            let j: Vec<&str> = x.name.split(del).collect();
-            let k = j[0].clone();
-            if h.contains_key(&k.to_owned().clone()){
-                h.get_mut(&k.to_owned().clone()).unwrap().push(x)
-            } else {
-                h.insert(k.to_owned().clone(), vec![x]);
+        } else {
+            let mut h: HashMap<String, Vec<&'a NPath>> = HashMap::new();
+            for x in graph.paths.iter() {
+                let j: Vec<&str> = x.name.split(del).collect();
+                let k = j[0].clone();
+                if h.contains_key(&k.to_owned().clone()) {
+                    h.get_mut(&k.to_owned().clone()).unwrap().push(x)
+                } else {
+                    h.insert(k.to_owned().clone(), vec![x]);
+                }
             }
-
         }
         self.genomes = h;
     }
