@@ -81,13 +81,13 @@ impl NGfa {
 
 ///
 pub struct GraphWrapper<'a>{
-    pub genomes: HashMap<String, Vec<&'a NPath>>,
+    pub genomes: Vec<(String, Vec<&'a NPath>)>,
 }
 
 
 impl <'a> GraphWrapper<'a>{
     pub fn new() -> Self{
-        let mut h: HashMap<String, Vec<&'a NPath>> =  HashMap::new();
+        let mut h: Vec<(String, Vec<&'a NPath>)> =  Vec::new();
         Self{
             genomes: h,
         }
@@ -105,7 +105,6 @@ impl <'a> GraphWrapper<'a>{
                 h.insert(x.name.clone(), vec![x]);
             }
         } else {
-            let mut h: HashMap<String, Vec<&'a NPath>> = HashMap::new();
             for x in graph.paths.iter() {
                 let j: Vec<&str> = x.name.split(del).collect();
                 let k = j[0].clone();
@@ -116,7 +115,13 @@ impl <'a> GraphWrapper<'a>{
                 }
             }
         }
-        self.genomes = h;
+        let mut v: Vec<(String, Vec<&'a NPath>)> = Vec::new();
+        let mut keyy : Vec<String> = h.keys().cloned().collect();
+        keyy.sort();
+        for x in keyy.iter(){
+            v.push((x.clone(), h.get(x).unwrap().clone()));
+        }
+        self.genomes = v;
     }
 
 
@@ -126,13 +131,18 @@ impl <'a> GraphWrapper<'a>{
 
 #[cfg(test)]
 mod tests {
-    use crate::NGfa;
+    use crate::{NGfa, GraphWrapper};
 
     #[test]
     fn it_works() {
         let mut g= NGfa::new();
         g.from_graph("/home/svorbrugg_local/Rust/data/AAA_AAB.cat.gfa");
-        println!("{}", g.paths.len());
+        let mut gg  = GraphWrapper::new();
+        gg.fromNGfa(&g, "_");
+        println!("Number of paths {}", g.paths.len());
+        println!("Number of paths {}", gg.genomes.len());
+        gg.fromNGfa(&g, " ");
+        println!("Number of paths {}", gg.genomes.len());
         assert_eq!(2 + 2, 4);
     }
 }
