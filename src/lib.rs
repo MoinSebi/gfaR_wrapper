@@ -3,14 +3,14 @@ use gfaR::Gfa;
 use std::mem::size_of_val;
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NNode {
     pub id: u32,
     pub len: usize,
     pub seq: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NEdge {
     pub from: u32,
     pub from_dir: bool,
@@ -18,7 +18,7 @@ pub struct NEdge {
     pub to_dir: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct NPath {
     pub name: String,
     pub dir: Vec<bool>,
@@ -26,7 +26,7 @@ pub struct NPath {
 
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /// The NumericGFA is GFA were node_ids are interger (u32)
 pub struct NGfa{
     pub nodes: HashMap<u32, NNode>,
