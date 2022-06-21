@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 use gfaR::Gfa;
-use std::mem::size_of_val;
-
 
 #[derive(Debug, Clone)]
 pub struct NNode {
@@ -82,14 +80,16 @@ impl NGfa {
 ///
 pub struct GraphWrapper<'a>{
     pub genomes: Vec<(String, Vec<&'a NPath>)>,
+    pub path2genome: HashMap<&'a String, String>
 }
 
 
 impl <'a> GraphWrapper<'a>{
     pub fn new() -> Self{
-        let mut h: Vec<(String, Vec<&'a NPath>)> =  Vec::new();
         Self{
-            genomes: h,
+            genomes: Vec::new(),
+            path2genome: HashMap::new(),
+
         }
     }
 
@@ -98,7 +98,7 @@ impl <'a> GraphWrapper<'a>{
     /// NGFA -> Graphwrapper
     /// If delimiter == " " (nothing)
     ///     -> No merging
-    pub fn fromNGfa(& mut self, graph: &'a NGfa, del: &str) {
+    pub fn from_ngfa(& mut self, graph: &'a NGfa, del: &str) {
         let mut h: HashMap<String, Vec<&'a NPath>> = HashMap::new();
         if del == " " {
             for x in graph.paths.iter() {
@@ -121,6 +121,14 @@ impl <'a> GraphWrapper<'a>{
         for x in keyy.iter(){
             v.push((x.clone(), h.get(x).unwrap().clone()));
         }
+        let mut j = HashMap::new();
+        for (k,v) in v.iter(){
+            for x in v.iter(){
+                j.insert(&x.name, k.to_owned());
+            }
+        }
+
+        self.path2genome = j;
         self.genomes = v;
     }
 
@@ -134,16 +142,17 @@ mod tests {
     use crate::{NGfa, GraphWrapper};
 
     #[test]
-    fn it_works() {
-        let mut g= NGfa::new();
-        g.from_graph("/home/svorbrugg_local/Rust/data/AAA_AAB.cat.gfa");
-        let mut gg  = GraphWrapper::new();
-        gg.fromNGfa(&g, "_");
-        println!("Number of paths {}", g.paths.len());
-        println!("Number of paths {}", gg.genomes.len());
-        gg.fromNGfa(&g, " ");
-        println!("Number of paths {}", gg.genomes.len());
-        assert_eq!(2 + 2, 4);
+    fn general_test() {
+        let mut ngfa = NGfa::new();
+        ngfa.from_graph("/home/svorbrugg_local/Rust/data/AAA_AAB.cat.gfa");
+        let mut gwrapper = GraphWrapper::new();
+        gwrapper.from_ngfa(&ngfa, "_");
+        println!("Number of paths: {}", ngfa.paths.len());
+        println!("Number of genomes: {}", gwrapper.genomes.len());
+        println!("Path2genome: {:?}", gwrapper.path2genome);
+        gwrapper.from_ngfa(&ngfa, " ");
+        println!("Number of genome: {}", gwrapper.genomes.len());
+        println!("Path2genome: {:?}", gwrapper.path2genome);
     }
 }
 
