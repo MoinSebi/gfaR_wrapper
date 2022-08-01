@@ -30,6 +30,7 @@ pub struct NGfa{
     pub nodes: HashMap<u32, NNode>,
     pub paths: Vec<NPath>,
     pub edges: Vec<NEdge>,
+    pub path2id: HashMap<String, usize>,
 }
 
 impl NGfa {
@@ -37,10 +38,12 @@ impl NGfa {
         let nodes: HashMap<u32, NNode> = HashMap::new();
         let paths: Vec<NPath> = Vec::new();
         let edges: Vec<NEdge> = Vec::new();
+
         Self {
             nodes: nodes,
             paths: paths,
             edges: edges,
+            path2id: HashMap::new(),
         }
     }
 
@@ -58,7 +61,8 @@ impl NGfa {
             nedges.push(NEdge {from: x.from.parse::<u32>().unwrap(), from_dir: x.from_dir.clone(), to: x.to.parse::<u32>().unwrap(), to_dir: x.to_dir.clone()})
         }
         let mut ps: Vec<NPath> = Vec::new();
-        for x in graph.paths.iter(){
+        for (i,x) in graph.paths.iter().enumerate(){
+            self.path2id.insert(x.name.clone(), i);
             let mut  j: Vec<bool> = Vec::new();
             let mut j2: Vec<u32> = Vec::new();
             for index in 0..x.nodes.len(){
