@@ -79,6 +79,7 @@ impl NGfa {
         }
         nodes.shrink_to_fit();
         nedges.shrink_to_fit();
+        ps.shrink_to_fit();
         self.nodes = nodes;
         self.paths = ps;
         self.edges = nedges;
@@ -90,6 +91,7 @@ impl NGfa {
         if file_path::new(filename).exists() {
             let file = File::open(filename).expect("ERROR: CAN NOT READ FILE\n");
             let reader = BufReader::new(file);
+            let mut count = 0;
             for line in reader.lines() {
                 let l = line.unwrap();
                 let line_split: Vec<&str> = l.split("\t").collect();
@@ -100,6 +102,8 @@ impl NGfa {
                     self.nodes.insert(line_split[1].parse().unwrap(), NNode { id: line_split[1].parse().unwrap(), seq: String::from(line_split[2]), len: line_split[2].len() });
                 } else if l.starts_with("P") {
                     let name: String = String::from(line_split[1]);
+                    self.path2id.insert(name.clone(), count);
+                    count += 1;
                     let mut dirs: Vec<bool> = line_split[2].split(",").map(|d| if &d[d.len() - 1..] == "+" { !false } else { !true }).collect();
                     let mut nodd: Vec<u32> = line_split[2].split(",").map(|d| d[..d.len() - 1].parse().unwrap()).collect();
                     dirs.shrink_to_fit();
@@ -114,12 +118,16 @@ impl NGfa {
 
         self.nodes.shrink_to_fit();
         self.edges.shrink_to_fit();
+        self.paths.shrink_to_fit();
+
     }
 
     pub fn from_file_direct2(& mut self, filename: &str) {
         if file_path::new(filename).exists() {
             let file = File::open(filename).expect("ERROR: CAN NOT READ FILE\n");
             let reader = BufReader::new(file);
+            let mut count = 0;
+
             for line in reader.lines() {
                 let l = line.unwrap();
                 let line_split: Vec<&str> = l.split("\t").collect();
@@ -130,6 +138,8 @@ impl NGfa {
                     self.nodes.insert(line_split[1].parse().unwrap(), NNode { id: line_split[1].parse().unwrap(), seq: "".to_owned(), len: line_split[2].len() });
                 } else if l.starts_with("P") {
                     let name: String = String::from(line_split[1]);
+                    self.path2id.insert(name.clone(), count);
+                    count += 1;
                     let mut dirs: Vec<bool> = line_split[2].split(",").map(|d| if &d[d.len() - 1..] == "+" { !false } else { !true }).collect();
                     let mut nodd: Vec<u32> = line_split[2].split(",").map(|d| d[..d.len() - 1].parse().unwrap()).collect();
                     dirs.shrink_to_fit();
@@ -139,7 +149,7 @@ impl NGfa {
                 }
             }
         }
-
+        self.paths.shrink_to_fit();
         self.nodes.shrink_to_fit();
 
     }
@@ -236,6 +246,8 @@ mod tests {
 
         let mut ngfa = NGfa::new();
         ngfa.from_file_direct2("/home/svorbrugg_local/Rust/data/AAA_AAB.cat.gfa");
+        println!("ewewe {}", ngfa.paths.len());
+        println!("ewewe {}", ngfa.paths.capacity());
         ngfa.remove_seq();
         let mut ngfa = NGfa::new();
         ngfa.from_file_direct("/home/svorbrugg_local/Rust/data/AAA_AAB.cat.gfa");
