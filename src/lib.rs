@@ -1,5 +1,9 @@
-use std::collections::HashMap;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+use hashbrown::HashMap;
 use gfaR::Gfa;
+use std::path::Path as file_path;
+
 
 #[derive(Debug, Clone)]
 pub struct NNode {
@@ -69,14 +73,85 @@ impl NGfa {
                 j.push(x.dir[index].clone());
                 j2.push(x.nodes[index].parse::<u32>().unwrap());
             }
+            j.shrink_to_fit();
+            j2.shrink_to_fit();
             ps.push(NPath{name: x.name.clone(), dir: j, nodes: j2})
         }
+        nodes.shrink_to_fit();
+        nedges.shrink_to_fit();
         self.nodes = nodes;
         self.paths = ps;
         self.edges = nedges;
 
     }
 
+
+    pub fn from_file_direct(& mut self, filename: &str) {
+        if file_path::new(filename).exists() {
+            let file = File::open(filename).expect("ERROR: CAN NOT READ FILE\n");
+            let reader = BufReader::new(file);
+            for line in reader.lines() {
+                let l = line.unwrap();
+                let line_split: Vec<&str> = l.split("\t").collect();
+                if l.starts_with("S") {
+                    if self.nodes.contains_key(&line_split[1].parse::<u32>().unwrap()) {
+                        eprintln!("Warning: Duplicated node id found");
+                    }
+                    self.nodes.insert(line_split[1].parse().unwrap(), NNode { id: line_split[1].parse().unwrap(), seq: String::from(line_split[2]), len: line_split[2].len() });
+                } else if l.starts_with("P") {
+                    let name: String = String::from(line_split[1]);
+                    let mut dirs: Vec<bool> = line_split[2].split(",").map(|d| if &d[d.len() - 1..] == "+" { !false } else { !true }).collect();
+                    let mut nodd: Vec<u32> = line_split[2].split(",").map(|d| d[..d.len() - 1].parse().unwrap()).collect();
+                    dirs.shrink_to_fit();
+                    nodd.shrink_to_fit();
+
+                    self.paths.push(NPath { name: name, dir: dirs, nodes: nodd });
+                } else if l.starts_with("L") {
+                    self.edges.push(NEdge { from: line_split[1].parse().unwrap(), to: line_split[3].parse().unwrap(), from_dir: if line_split[2] == "+" { !false } else { !true }, to_dir: if line_split[4] == "+" { !false } else { !true } })
+                }
+            }
+        }
+
+        self.nodes.shrink_to_fit();
+        self.edges.shrink_to_fit();
+    }
+
+    pub fn from_file_direct2(& mut self, filename: &str) {
+        if file_path::new(filename).exists() {
+            let file = File::open(filename).expect("ERROR: CAN NOT READ FILE\n");
+            let reader = BufReader::new(file);
+            for line in reader.lines() {
+                let l = line.unwrap();
+                let line_split: Vec<&str> = l.split("\t").collect();
+                if l.starts_with("S") {
+                    if self.nodes.contains_key(&line_split[1].parse::<u32>().unwrap()) {
+                        eprintln!("Warning: Duplicated node id found");
+                    }
+                    self.nodes.insert(line_split[1].parse().unwrap(), NNode { id: line_split[1].parse().unwrap(), seq: "".to_owned(), len: line_split[2].len() });
+                } else if l.starts_with("P") {
+                    let name: String = String::from(line_split[1]);
+                    let mut dirs: Vec<bool> = line_split[2].split(",").map(|d| if &d[d.len() - 1..] == "+" { !false } else { !true }).collect();
+                    let mut nodd: Vec<u32> = line_split[2].split(",").map(|d| d[..d.len() - 1].parse().unwrap()).collect();
+                    dirs.shrink_to_fit();
+                    nodd.shrink_to_fit();
+
+                    self.paths.push(NPath { name: name, dir: dirs, nodes: nodd });
+                }
+            }
+        }
+
+        self.nodes.shrink_to_fit();
+
+    }
+
+
+
+    pub fn remove_seq(& mut self){
+        for (_k,v) in self.nodes.iter_mut(){
+            v.seq = "".to_owned();
+        }
+
+    }
 }
 
 
@@ -148,15 +223,23 @@ mod tests {
     #[test]
     fn general_test() {
         let mut ngfa = NGfa::new();
-        ngfa.from_graph("/home/svorbrugg_local/Rust/data/AAA_AAB.cat.gfa");
+        ngfa.from_file_direct("/home/svorbrugg_local/Rust/data/AAA_AAB.cat.gfa");
         let mut gwrapper = GraphWrapper::new();
+        println!("Number of paths: {}", ngfa.edges.len());
         gwrapper.from_ngfa(&ngfa, "_");
-        println!("Number of paths: {}", ngfa.paths.len());
-        println!("Number of genomes: {}", gwrapper.genomes.len());
+        println!("Number of paths: {}", ngfa.edges.capacity());
+        println!("Number of genomes: {}", gwrapper.genomes.capacity());
         println!("Path2genome: {:?}", gwrapper.path2genome);
         gwrapper.from_ngfa(&ngfa, " ");
         println!("Number of genome: {}", gwrapper.genomes.len());
         println!("Path2genome: {:?}", gwrapper.path2genome);
+
+        let mut ngfa = NGfa::new();
+        ngfa.from_file_direct2("/home/svorbrugg_local/Rust/data/AAA_AAB.cat.gfa");
+        ngfa.remove_seq();
+        let mut ngfa = NGfa::new();
+        ngfa.from_file_direct("/home/svorbrugg_local/Rust/data/AAA_AAB.cat.gfa");
+
     }
 }
 
